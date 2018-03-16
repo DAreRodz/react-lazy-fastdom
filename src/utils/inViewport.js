@@ -1,10 +1,24 @@
-import getElementPosition from './getElementPosition';
+import { getBoundingClientRect, getElementBox, getWindowProps } from './fastdom';
 
-const isHidden = (element) =>
-  element.offsetParent === null;
+// Finds element's position relative to the whole document,
+// rather than to the viewport as it is the case with .getBoundingClientRect().
+const getElementPosition = (elementClientRect, windowProps) => {
+  const { top, left } = elementClientRect;
+  const { pageXOffset, pageYOffset } = windowProps;
+  return {
+    top: top + pageYOffset,
+    left: left + pageXOffset,
+  };
+};
 
-export default function inViewport(element, container, customOffset) {
-  if (isHidden(element)) {
+export default async function inViewport(element, container, customOffset) {
+  const [elementClientRect, elementBox, windowProps] = await Promise.all([
+    getBoundingClientRect(element),
+    getElementBox(element),
+    getWindowProps(),
+  ]);
+
+  if (!element || elementBox.offsetParent === null) { // isHidden
     return false;
   }
 
@@ -14,25 +28,30 @@ export default function inViewport(element, container, customOffset) {
   let right;
 
   if (typeof container === 'undefined' || container === window) {
-    top = window.pageYOffset;
-    left = window.pageXOffset;
-    bottom = top + window.innerHeight;
-    right = left + window.innerWidth;
+    top = windowProps.pageYOffset;
+    left = windowProps.pageXOffset;
+    bottom = top + windowProps.innerHeight;
+    right = left + windowProps.innerWidth;
   } else {
-    const containerPosition = getElementPosition(container);
+    const [containerClientRect, containerBox] = await Promise.all([
+      getBoundingClientRect(container),
+      getElementBox(container),
+    ]);
+
+    const containerPosition = getElementPosition(containerClientRect, windowProps);
 
     top = containerPosition.top;
     left = containerPosition.left;
-    bottom = top + container.offsetHeight;
-    right = left + container.offsetWidth;
+    bottom = top + containerBox.offsetHeight;
+    right = left + containerBox.offsetWidth;
   }
 
-  const elementPosition = getElementPosition(element);
+  const elementPosition = getElementPosition(elementClientRect, windowProps);
 
   return (
-    top <= elementPosition.top + element.offsetHeight + customOffset.top &&
+    top <= elementPosition.top + elementBox.offsetHeight + customOffset.top &&
     bottom >= elementPosition.top - customOffset.bottom &&
-    left <= elementPosition.left + element.offsetWidth + customOffset.left &&
+    left <= elementPosition.left + elementBox.offsetWidth + customOffset.left &&
     right >= elementPosition.left - customOffset.right
   );
 }

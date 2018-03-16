@@ -1,10 +1,8 @@
 import React, { Children, Component } from 'react';
 import PropTypes from 'prop-types';
-import { findDOMNode } from 'react-dom';
 import { add, remove } from 'eventlistener';
 import debounce from 'lodash.debounce';
 import throttle from 'lodash.throttle';
-import parentScroll from './utils/parentScroll';
 import inViewport from './utils/inViewport';
 
 export default class LazyLoad extends Component {
@@ -36,6 +34,8 @@ export default class LazyLoad extends Component {
 
     add(window, 'resize', this.lazyLoadHandler);
     add(eventNode, 'scroll', this.lazyLoadHandler);
+    add(eventNode, 'touchmove', this.lazyLoadHandler);
+    add(eventNode, 'transitionend', this.lazyLoadHandler);
   }
 
   componentWillReceiveProps() {
@@ -58,7 +58,7 @@ export default class LazyLoad extends Component {
   }
 
   getEventNode() {
-    return parentScroll(findDOMNode(this));
+    return this.props.container || window; // parentScroll(this.node);
   }
 
   getOffset() {
@@ -79,15 +79,14 @@ export default class LazyLoad extends Component {
     };
   }
 
-  lazyLoadHandler() {
+  async lazyLoadHandler() {
     if (!this._mounted) {
       return;
     }
     const offset = this.getOffset();
-    const node = findDOMNode(this);
     const eventNode = this.getEventNode();
 
-    if (inViewport(node, eventNode, offset)) {
+    if (await inViewport(this.node, eventNode, offset)) {
       const { onContentVisible } = this.props;
 
       this.setState({ visible: true }, () => {
@@ -104,29 +103,33 @@ export default class LazyLoad extends Component {
 
     remove(window, 'resize', this.lazyLoadHandler);
     remove(eventNode, 'scroll', this.lazyLoadHandler);
+    remove(eventNode, 'touchmove', this.lazyLoadHandler);
+    remove(eventNode, 'transitionend', this.lazyLoadHandler);
   }
 
   render() {
-    const { children, className, height, width } = this.props;
+    const { children, className, height, width, elementType: Element } = this.props;
     const { visible } = this.state;
 
     const elStyles = { height, width };
-    const elClasses = (
-      'LazyLoad' +
-      (visible ? ' is-visible' : '') +
-      (className ? ` ${className}` : '')
-    );
+    const elClasses = `LazyLoad${visible ? ' is-visible' : ''}${className ? ` ${className}` : ''}`;
 
-    return React.createElement(this.props.elementType, {
-      className: elClasses,
-      style: elStyles,
-    }, visible && Children.only(children));
+    return (
+      <Element
+        className={elClasses}
+        ref={node => { this.node = node; }}
+        style={elStyles}
+      >
+        {visible && Children.only(children)}
+      </Element>
+    );
   }
 }
 
 LazyLoad.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
+  container: PropTypes.any,
   debounce: PropTypes.bool,
   elementType: PropTypes.string,
   height: PropTypes.oneOfType([

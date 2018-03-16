@@ -1,12 +1,6 @@
-const style = (element, prop) =>
-  typeof getComputedStyle !== 'undefined'
-    ? getComputedStyle(element, null).getPropertyValue(prop)
-    : element.style[prop];
-
-const overflow = (element) =>
-  style(element, 'overflow') + style(element, 'overflow-y') + style(element, 'overflow-x');
-
-const scrollParent = (element) => {
+import { getOverflowValues } from './fastdom';
+// DEPRECATED
+const scrollParent = async element => {
   if (!(element instanceof HTMLElement)) {
     return window;
   }
@@ -22,7 +16,9 @@ const scrollParent = (element) => {
       break;
     }
 
-    if (/(scroll|auto)/.test(overflow(parent))) {
+    const { overflow, overflowX, overflowY } = await getOverflowValues(element);
+
+    if (/(scroll|auto)/.test(`${overflow}${overflowX}${overflowY}`)) {
       return parent;
     }
 
