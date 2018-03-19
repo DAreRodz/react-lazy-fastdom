@@ -1,7 +1,7 @@
 {
-  "name": "react-lazy-load",
-  "version": "3.0.13",
-  "description": "Simple lazy loading component built with react",
+  "name": "react-lazy-fastdom",
+  "version": "4.0.0",
+  "description": "Simple lazy loading component built with react. Now with fastdom.",
   "main": "./lib/LazyLoad.js",
   "scripts": {
     "build": "npm run build:lib && npm run build:umd && npm run build:umd:min",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/loktar00/react-lazy-load.git"
+    "url": "https://github.com/DAreRodz/react-lazy-fastdom.git"
   },
   "files": [
     "dist",
@@ -26,11 +26,13 @@
     "reactjs",
     "react-component",
     "load",
-    "lazy"
+    "lazy",
+    "fastdom"
   ],
   "author": "Jason Brown <loktar00@gmail.com> (https://twitter.com/loktar00)",
   "contributors": [
-    "Sergey Laptev <iamsergeylaptev@gmail.com> (https://twitter.com/iamsergeylaptev)"
+    "Sergey Laptev <iamsergeylaptev@gmail.com> (https://twitter.com/iamsergeylaptev)",
+    "David Arenas <darensr@gmail.com> (https://github.com/DAreRodz)"
   ],
   "license": "MIT",
   "devDependencies": {
@@ -39,6 +41,7 @@
     "babel-eslint": "^4.1.5",
     "babel-jest": "^12.0.2",
     "babel-loader": "^6.2.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-es2015": "^6.1.18",
     "babel-preset-react": "^6.1.18",
     "babel-preset-stage-0": "^6.1.18",
@@ -46,14 +49,16 @@
     "eslint-config-airbnb": "^0.1.0",
     "eslint-plugin-react": "^3.7.1",
     "jest-cli": "^12.0.2",
-    "react": "^0.14.8",
+    "react": "^16.2.0",
     "react-addons-test-utils": "^0.14.8",
-    "react-dom": "^0.14.8",
+    "react-dom": "^16.2.0",
     "rimraf": "^2.4.4",
     "webpack": "^1.12.2"
   },
   "dependencies": {
+    "babel-runtime": "^6.26.0",
     "eventlistener": "0.0.1",
+    "fastdom": "^1.0.8",
     "lodash.debounce": "^4.0.0",
     "lodash.throttle": "^4.0.0",
     "prop-types": "^15.5.8"

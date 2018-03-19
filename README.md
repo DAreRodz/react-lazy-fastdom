@@ -1,27 +1,27 @@
-React Lazy Load Component
+React Lazy Fastdom - LazyLoad Component
 =========================
 
-React Lazy Load is easy to use React component which helps you defer loading content in predictable way. It's fast, works in IE8+, 6KB minified and uses debounce function by default. You can also use component inside scrolling container, such as div with scrollbar. It will be found automatically. Check out an example.
+React Lazy Fastdom is a fork of [React Lazy Load](https://github.com/loktar00/react-lazy-load), an easy to use React component which helps you defer loading content in predictable way.
 
-[![build status](https://img.shields.io/travis/loktar00/react-lazy-load.svg?style=flat-square)](https://travis-ci.org/loktar00/react-lazy-load)
-[![dependency status](https://david-dm.org/loktar00/react-lazy-load.svg?style=flat-square)](https://david-dm.org/loktar00/react-lazy-load)
-[![npm downloads](https://img.shields.io/npm/dm/react-lazy-load.svg?style=flat-square)](https://www.npmjs.com/package/react-lazy-load)
+This fork uses [fastdom](https://github.com/wilsonpage/fastdom) to get the values of the css properties and avoid possible layout/reflow trashing.
+
+Also, visibility of lazy load components is calculated using `window` as reference by default. You can also use component inside scrolling container, such as div with scrollbar, but if you want to do that, the container element must be explicitly defined through the `container` prop.
 
 ## Installation
 React Lazy Load requires **React 0.14 or later.**
 
 ```
-npm install --save react-lazy-load
+npm install --save react-lazy-fastdom
 ```
 
 ## Examples
-* [Basic](https://github.com/loktar00/react-lazy-load/tree/master/examples/basic)
+* [Basic](https://github.com/DAreRodz/react-lazy-fastdom/tree/master/examples/basic)
 
 ## Usage
 
 ```jsx
 import React from 'react';
-import LazyLoad from 'react-lazy-load';
+import LazyLoad from 'react-lazy-fastdom';
 
 const MyComponent = () => (
   <div>
@@ -67,7 +67,7 @@ The `offsetVertical` option allows you to specify how far above and below the vi
 #### offsetHorizontal
 Type: `Number|String` Default: `offset`'s value
 
-The `offsetHorizontal` option allows you to specify how far to the left and right of the viewport you want to _begin_ displaying your contet.
+The `offsetHorizontal` option allows you to specify how far to the left and right of the viewport you want to _begin_ displaying your content.
 
 #### offsetTop
 Type: `Number|String` Default: `offsetVertical`'s value
@@ -113,3 +113,9 @@ The `width` option allows you to set the element's width even when it has no con
 Type `Function`
 
 A callback function to execute when the content appears on the screen.
+
+### container
+Type `Element|Window`
+
+A reference to a DOM element used for calculating visibility of LazyLoad components.
+The default is `window`.
