@@ -54,6 +54,7 @@
     "webpack": "^1.12.2"
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "eventlistener": "0.0.1",
     "fastdom": "^1.0.8",
     "lodash.debounce": "^4.0.0",

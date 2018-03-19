@@ -1,3 +1,4 @@
+import 'babel-polyfill';
 import React, { Children, Component } from 'react';
 import PropTypes from 'prop-types';
 import { add, remove } from 'eventlistener';
@@ -112,7 +113,11 @@ export default class LazyLoad extends Component {
     const { visible } = this.state;
 
     const elStyles = { height, width };
-    const elClasses = `LazyLoad${visible ? ' is-visible' : ''}${className ? ` ${className}` : ''}`;
+    const elClasses = `LazyPlease${
+      visible ? ' is-visible' : ''
+    }${
+      className ? ` ${className}` : ''
+    }`;
 
     return (
       <Element
