@@ -1,7 +1,7 @@
-React Lazy Please - LazyLoad Component
+React Lazy Fastdom - LazyLoad Component
 =========================
 
-React Lazy Please is a fork of [React Lazy Load](https://github.com/loktar00/react-lazy-load), an easy to use React component which helps you defer loading content in predictable way.
+React Lazy Fastdom is a fork of [React Lazy Load](https://github.com/loktar00/react-lazy-load), an easy to use React component which helps you defer loading content in predictable way.
 
 This fork uses [fastdom](https://github.com/wilsonpage/fastdom) to get the values of the css properties and avoid possible layout/reflow trashing.
 
@@ -11,17 +11,17 @@ Also, visibility of lazy load components is calculated using `window` as referen
 React Lazy Load requires **React 0.14 or later.**
 
 ```
-npm install --save react-lazy-please
+npm install --save react-lazy-fastdom
 ```
 
 ## Examples
-* [Basic](https://github.com/DAreRodz/react-lazy-please/tree/master/examples/basic)
+* [Basic](https://github.com/DAreRodz/react-lazy-fastdom/tree/master/examples/basic)
 
 ## Usage
 
 ```jsx
 import React from 'react';
-import LazyLoad from 'react-lazy-please';
+import LazyLoad from 'react-lazy-fastdom';
 
 const MyComponent = () => (
   <div>
