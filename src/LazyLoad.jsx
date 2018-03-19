@@ -113,7 +113,7 @@ export default class LazyLoad extends Component {
     const { visible } = this.state;
 
     const elStyles = { height, width };
-    const elClasses = `LazyPlease${
+    const elClasses = `LazyLoad${
       visible ? ' is-visible' : ''
     }${
       className ? ` ${className}` : ''
