@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/loktar00/react-lazy-load.git"
+    "url": "https://github.com/DAreRodz/react-lazy-please.git"
   },
   "files": [
     "dist",
@@ -26,7 +26,8 @@
     "reactjs",
     "react-component",
     "load",
-    "lazy"
+    "lazy",
+    "please"
   ],
   "author": "Jason Brown <loktar00@gmail.com> (https://twitter.com/loktar00)",
   "contributors": [
