@@ -5,19 +5,71 @@ import throttle from 'lodash.throttle';
 import inViewport from './utils/inViewport';
 
 export default class LazyLoad extends Component {
+  static lazyMap = new Map();
+
+  static createHandler(container, key, th, db) {
+    if (th <= 0) return;
+    const handleAttached = () => {
+      const { attached } = LazyLoad.lazyMap.get(container)[key];
+      attached.forEach(lazy => lazy.checkVisibility());
+    };
+
+    const handler = (db ? debounce : throttle)(handleAttached, th);
+    const attached = [];
+
+    const object = { handler, attached };
+
+    if (!LazyLoad.lazyMap.has(container)) LazyLoad.lazyMap.set(container, {});
+    LazyLoad.lazyMap.get(container)[key] = object;
+
+    window.addEventListener('resize', handler);
+    container.addEventListener('scroll', handler);
+    container.addEventListener('touchmove', handler);
+    container.addEventListener('transitionend', handler);
+  }
+
+  static removeHandler(container, key) {
+    const { handler } = LazyLoad.lazyMap.get(container)[key];
+
+    handler.cancel();
+
+    window.removeEventListener('resize', handler);
+    container.removeEventListener('scroll', handler);
+    container.removeEventListener('touchmove', handler);
+    container.removeEventListener('transitionend', handler);
+
+    delete LazyLoad.lazyMap.get(container)[key];
+  }
+
+  static getKey(lazy) {
+    const { throttle: th, debounce: db } = lazy.props;
+    return `${th}_${db}`;
+  }
+
+  static attachLazyLoad(lazy) {
+    const { throttle: th, debounce: db } = lazy.props;
+    const key = LazyLoad.getKey(lazy);
+    const container = lazy.getEventNode();
+
+    if (!LazyLoad.lazyMap.has(container) || !LazyLoad.lazyMap.get(container)[key]) {
+      LazyLoad.createHandler(container, key, th, db);
+    }
+
+    LazyLoad.lazyMap.get(container)[key].attached.push(lazy);
+  }
+
+  static detachLazyLoad(lazy) {
+    const key = LazyLoad.getKey(lazy);
+    const container = lazy.getEventNode();
+    const obj = LazyLoad.lazyMap.get(container)[key];
+    obj.attached = obj.attached.filter(a => a !== lazy);
+    if (obj.attached.length === 0) LazyLoad.removeHandler(container, key);
+  }
+
   constructor(props) {
     super(props);
 
     this.handleVisibility = this.handleVisibility.bind(this);
-    this.lazyLoadHandler = this.lazyLoadHandler.bind(this);
-
-    if (props.throttle > 0) {
-      if (props.debounce) {
-        this.lazyLoadHandler = debounce(this.lazyLoadHandler, props.throttle);
-      } else {
-        this.lazyLoadHandler = throttle(this.lazyLoadHandler, props.throttle);
-      }
-    }
 
     this.checkingVisibility = false;
     this.visible = false;
@@ -26,22 +78,7 @@ export default class LazyLoad extends Component {
 
   componentDidMount() {
     this.mounted = true;
-    const eventNode = this.getEventNode();
-
-    this.lazyLoadHandler();
-
-    if (this.lazyLoadHandler.flush) {
-      this.lazyLoadHandler.flush();
-    }
-
-    window.addEventListener('resize', this.lazyLoadHandler);
-    eventNode.addEventListener('scroll', this.lazyLoadHandler);
-    eventNode.addEventListener('touchmove', this.lazyLoadHandler);
-    eventNode.addEventListener('transitionend', this.lazyLoadHandler);
-  }
-
-  componentWillReceiveProps() {
-    if (!this.state.visible) this.lazyLoadHandler();
+    LazyLoad.attachLazyLoad(this);
   }
 
   shouldComponentUpdate(_nextProps, nextState) {
@@ -50,11 +87,7 @@ export default class LazyLoad extends Component {
 
   componentWillUnmount() {
     this.mounted = false;
-    if (this.lazyLoadHandler.cancel) {
-      this.lazyLoadHandler.cancel();
-    }
-
-    this.detachListeners();
+    LazyLoad.detachLazyLoad(this);
   }
 
   getEventNode() {
@@ -83,7 +116,7 @@ export default class LazyLoad extends Component {
     };
   }
 
-  lazyLoadHandler() {
+  checkVisibility() {
     if (!this.mounted || this.checkingVisibility) return;
     const offset = this.getOffset();
     const eventNode = this.getEventNode();
@@ -101,17 +134,7 @@ export default class LazyLoad extends Component {
 
     this.setState({ visible: true }, () => onContentVisible && onContentVisible());
 
-    this.lazyLoadHandler.cancel();
-    this.detachListeners();
-  }
-
-  detachListeners() {
-    const eventNode = this.getEventNode();
-
-    window.removeEventListener('resize', this.lazyLoadHandler);
-    eventNode.removeEventListener('scroll', this.lazyLoadHandler);
-    eventNode.removeEventListener('touchmove', this.lazyLoadHandler);
-    eventNode.removeEventListener('transitionend', this.lazyLoadHandler);
+    LazyLoad.detachLazyLoad(this);
   }
 
   render() {
