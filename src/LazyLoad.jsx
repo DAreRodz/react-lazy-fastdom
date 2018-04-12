@@ -1,7 +1,5 @@
-// import 'babel-polyfill';
 import React, { Children, Component } from 'react';
 import PropTypes from 'prop-types';
-import { add, remove } from 'eventlistener';
 import debounce from 'lodash.debounce';
 import throttle from 'lodash.throttle';
 import inViewport from './utils/inViewport';
@@ -10,6 +8,7 @@ export default class LazyLoad extends Component {
   constructor(props) {
     super(props);
 
+    this.handleVisibility = this.handleVisibility.bind(this);
     this.lazyLoadHandler = this.lazyLoadHandler.bind(this);
 
     if (props.throttle > 0) {
@@ -20,11 +19,13 @@ export default class LazyLoad extends Component {
       }
     }
 
+    this.checkingVisibility = false;
+    this.visible = false;
     this.state = { visible: false };
   }
 
   componentDidMount() {
-    this._mounted = true;
+    this.mounted = true;
     const eventNode = this.getEventNode();
 
     this.lazyLoadHandler();
@@ -33,16 +34,14 @@ export default class LazyLoad extends Component {
       this.lazyLoadHandler.flush();
     }
 
-    add(window, 'resize', this.lazyLoadHandler);
-    add(eventNode, 'scroll', this.lazyLoadHandler);
-    add(eventNode, 'touchmove', this.lazyLoadHandler);
-    add(eventNode, 'transitionend', this.lazyLoadHandler);
+    window.addEventListener('resize', this.lazyLoadHandler);
+    eventNode.addEventListener('scroll', this.lazyLoadHandler);
+    eventNode.addEventListener('touchmove', this.lazyLoadHandler);
+    eventNode.addEventListener('transitionend', this.lazyLoadHandler);
   }
 
   componentWillReceiveProps() {
-    if (!this.state.visible) {
-      this.lazyLoadHandler();
-    }
+    if (!this.state.visible) this.lazyLoadHandler();
   }
 
   shouldComponentUpdate(_nextProps, nextState) {
@@ -50,7 +49,7 @@ export default class LazyLoad extends Component {
   }
 
   componentWillUnmount() {
-    this._mounted = false;
+    this.mounted = false;
     if (this.lazyLoadHandler.cancel) {
       this.lazyLoadHandler.cancel();
     }
@@ -64,48 +63,55 @@ export default class LazyLoad extends Component {
 
   getOffset() {
     const {
-      offset, offsetVertical, offsetHorizontal,
-      offsetTop, offsetBottom, offsetLeft, offsetRight, threshold,
+      offset,
+      offsetVertical,
+      offsetHorizontal,
+      offsetTop,
+      offsetBottom,
+      offsetLeft,
+      offsetRight,
+      threshold,
     } = this.props;
 
-    const _offsetAll = threshold || offset;
-    const _offsetVertical = offsetVertical || _offsetAll;
-    const _offsetHorizontal = offsetHorizontal || _offsetAll;
+    const offsetAll = threshold || offset;
 
     return {
-      top: offsetTop || _offsetVertical,
-      bottom: offsetBottom || _offsetVertical,
-      left: offsetLeft || _offsetHorizontal,
-      right: offsetRight || _offsetHorizontal,
+      top: offsetTop || offsetVertical || offsetAll,
+      bottom: offsetBottom || offsetVertical || offsetAll,
+      left: offsetLeft || offsetHorizontal || offsetAll,
+      right: offsetRight || offsetHorizontal || offsetAll,
     };
   }
 
-  async lazyLoadHandler() {
-    if (!this._mounted) {
-      return;
-    }
+  lazyLoadHandler() {
+    if (!this.mounted || this.checkingVisibility) return;
     const offset = this.getOffset();
     const eventNode = this.getEventNode();
+    this.checkingVisibility = true;
+    inViewport(this.node, eventNode, offset).then(this.handleVisibility);
+  }
 
-    if (await inViewport(this.node, eventNode, offset)) {
-      const { onContentVisible } = this.props;
+  handleVisibility(visible) {
+    const { onContentVisible } = this.props;
 
-      this.setState({ visible: true }, () => {
-        if (onContentVisible) {
-          onContentVisible();
-        }
-      });
-      this.detachListeners();
-    }
+    this.checkingVisibility = false;
+
+    if (!visible || this.visible) return;
+    this.visible = true;
+
+    this.setState({ visible: true }, () => onContentVisible && onContentVisible());
+
+    this.lazyLoadHandler.cancel();
+    this.detachListeners();
   }
 
   detachListeners() {
     const eventNode = this.getEventNode();
 
-    remove(window, 'resize', this.lazyLoadHandler);
-    remove(eventNode, 'scroll', this.lazyLoadHandler);
-    remove(eventNode, 'touchmove', this.lazyLoadHandler);
-    remove(eventNode, 'transitionend', this.lazyLoadHandler);
+    window.removeEventListener('resize', this.lazyLoadHandler);
+    eventNode.removeEventListener('scroll', this.lazyLoadHandler);
+    eventNode.removeEventListener('touchmove', this.lazyLoadHandler);
+    eventNode.removeEventListener('transitionend', this.lazyLoadHandler);
   }
 
   render() {
@@ -113,16 +119,16 @@ export default class LazyLoad extends Component {
     const { visible } = this.state;
 
     const elStyles = { height, width };
-    const elClasses = `LazyLoad${
-      visible ? ' is-visible' : ''
-    }${
+    const elClasses = `LazyTest LazyLoad${visible ? ' is-visible' : ''}${
       className ? ` ${className}` : ''
     }`;
 
     return (
       <Element
         className={elClasses}
-        ref={node => { this.node = node; }}
+        ref={node => {
+          this.node = node;
+        }}
         style={elStyles}
       >
         {visible && Children.only(children)}
@@ -137,10 +143,7 @@ LazyLoad.propTypes = {
   container: PropTypes.any,
   debounce: PropTypes.bool,
   elementType: PropTypes.string,
-  height: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.number,
-  ]),
+  height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   offset: PropTypes.number,
   offsetBottom: PropTypes.number,
   offsetHorizontal: PropTypes.number,
@@ -150,14 +153,17 @@ LazyLoad.propTypes = {
   offsetVertical: PropTypes.number,
   threshold: PropTypes.number,
   throttle: PropTypes.number,
-  width: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.number,
-  ]),
+  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onContentVisible: PropTypes.func,
 };
 
 LazyLoad.defaultProps = {
+  className: null,
+  container: null,
+  height: null,
+  width: null,
+  threshold: 0,
+  onContentVisible: null,
   elementType: 'div',
   debounce: true,
   offset: 0,
