@@ -1,6 +1,6 @@
 {
   "name": "react-lazy-fastdom",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Simple lazy loading component built with react. Now with fastdom.",
   "main": "./lib/LazyLoad.js",
   "scripts": {
